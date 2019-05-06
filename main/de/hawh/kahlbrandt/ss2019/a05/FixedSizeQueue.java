@@ -13,6 +13,7 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
     private static final long serialVersionUID = 13245;
     private transient static final int _minLength = 1;
     private int _maxLength;
+    private int _firstElement = 0;
     private K[] _queue;
     private transient int _currentSize = 0;
 
@@ -39,7 +40,11 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         if (this._currentSize == 0) {
             throw new QueueEmptyException();
         }
-        this._queue = Arrays.copyOfRange(this._queue, 1, this._queue.length + 1);
+        this._queue[this._firstElement] = null;
+        ++this._firstElement;
+        if (this._firstElement > this._maxLength) {
+            this._firstElement = 0;
+        }
         --this._currentSize;
     }
 
@@ -48,7 +53,7 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         if (this.isEmpty()) {
             throw new QueueEmptyException();
         }
-        return this._queue[0];
+        return this._queue[this._firstElement];
     }
 
     @Override
