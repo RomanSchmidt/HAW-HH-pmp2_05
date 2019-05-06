@@ -2,18 +2,22 @@ package de.hawh.kahlbrandt.ss2019.a05;
 
 import de.hawh.kahlbrandt.ss2019.a05.interfaces.Queue;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 
 public class FixedSizeQueue<K> implements Queue, Serializable {
 
+    private static final long serialVersionUID = 13245;
     private transient static final int _minLength = 1;
-    private final int _maxLength;
+    private int _maxLength;
     private K[] _queue;
-    private int _currentSize = 0;
+    private transient int _currentSize = 0;
 
     public FixedSizeQueue() {
-        this(FixedSizeQueue._minLength);
+        this(FixedSizeQueue.DEFAULT_CAPACITY);
     }
 
     public FixedSizeQueue(int maxLength) {
@@ -26,12 +30,8 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         if (this.isFull()) {
             throw new QueueFullException();
         }
-        System.out.println("current size before enqueue: " + this._currentSize);
-        System.out.println("_queue before enqueue: " + this._queue.length);
         this._queue[this._currentSize] = (K) element;
         this._currentSize++;
-        System.out.println("after enqueue: " + this._currentSize);
-        System.out.println("_queue after enqueue: " + this._queue.length);
     }
 
     @Override
@@ -39,13 +39,8 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         if (this._currentSize == 0) {
             throw new QueueEmptyException();
         }
-        System.out.println("this._currentSize before dequeue: " + this._currentSize);
-        System.out.println("size of array before dequeue: " + this._queue.length);
-
         this._queue = Arrays.copyOfRange(this._queue, 1, this._queue.length + 1);
         --this._currentSize;
-        System.out.println("this._currentSize after dequeue: " + this._currentSize);
-        System.out.println("size of array after dequeue: " + this._queue.length);
     }
 
     @Override
@@ -95,5 +90,23 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         }
         output.deleteCharAt(output.length() - 1);
         return output.toString();
+    }
+
+    private void writeObject(ObjectOutputStream stream) throws IOException {
+        ObjectOutputStream out = new ObjectOutputStream(stream);
+        out.writeObject(this._queue);
+        out.writeObject(this._maxLength);
+    }
+
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException, QueueFullException {
+        ObjectInputStream in = new ObjectInputStream(stream);
+
+        K[] queue = (K[]) in.readObject();
+        this._maxLength = (int) in.readObject();
+        this._queue = (K[]) new Object[Math.max(FixedSizeQueue._minLength, this._maxLength)];
+
+        for (K k : queue) {
+            this.enqueue(k);
+        }
     }
 }
