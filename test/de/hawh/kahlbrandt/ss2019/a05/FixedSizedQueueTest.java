@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Testcases for a class to be written as a lab task.
  *
- * @author Bernd Kahlbrandt
+ * @author Bernd Kahlbrandt, Stanislaw Brug, Roman Schmidt
  */
 class FixedSizedQueueTest {
     private final String _serializedFile = System.getProperty("user.dir") + "/src/serializedFile.ser";
@@ -132,7 +132,7 @@ class FixedSizedQueueTest {
             missing.add("Have you overwritten 'toString'?");
         }
         try {
-            FixedSizeQueue.class.getDeclaredMethod("equals", new Class<?>[0]);
+            FixedSizeQueue.class.getDeclaredMethod("equals", Object.class);
         } catch (NoSuchMethodException | SecurityException e) {
             missing.add("Have you overwritten 'equals'?");
         }
@@ -192,7 +192,6 @@ class FixedSizedQueueTest {
             out.writeObject(this.smallQueue01);
             out.close();
             fileOut.close();
-            System.out.println("Serialized data is saved in " + this._serializedFile);
         } catch (IOException i) {
             i.printStackTrace();
         }
@@ -216,8 +215,22 @@ class FixedSizedQueueTest {
             return;
         }
 
-        assertEquals(e.toString(), this.smallQueue01.toString());
-        assertEquals(e.hashCode(), this.smallQueue01.hashCode());
+        assertEquals(this.smallQueue01.toString(), e.toString());
+        assertEquals(this.smallQueue01.hashCode(), e.hashCode());
         assertTrue(e.equals(this.smallQueue01));
+    }
+
+    @Test
+    void jumpingLastElement() {
+        assertDoesNotThrow(() -> {
+            this.smallQueue01.dequeue();
+            this.smallQueue01.enqueue("asdf");
+            this.smallQueue01.dequeue();
+            this.smallQueue01.enqueue("asdf");
+            this.smallQueue01.dequeue();
+            this.smallQueue01.enqueue("asdf");
+            this.smallQueue01.dequeue();
+            this.smallQueue01.enqueue("asdf");
+        });
     }
 }

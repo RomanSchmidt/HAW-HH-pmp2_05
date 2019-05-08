@@ -8,6 +8,9 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 
+/**
+ * @author Stanislaw Brug, Roman Schmidt
+ */
 public class FixedSizeQueue<K> implements Queue, Serializable {
 
     private static final long serialVersionUID = 13245;
@@ -15,15 +18,15 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
     private int _maxLength;
     private int _firstElement = 0;
     private K[] _queue;
-    private transient int _currentSize = 0;
+    private int _currentSize = 0;
 
     public FixedSizeQueue() {
         this(FixedSizeQueue.DEFAULT_CAPACITY);
     }
 
     public FixedSizeQueue(int maxLength) {
-        this._maxLength = maxLength;
-        this._queue = (K[]) new Object[Math.max(FixedSizeQueue._minLength, maxLength)];
+        this._maxLength = Math.max(FixedSizeQueue._minLength, maxLength);
+        this._queue = (K[]) new Object[this._maxLength];
     }
 
     @Override
@@ -31,8 +34,7 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         if (this.isFull()) {
             throw new QueueFullException();
         }
-        this._queue[this._currentSize] = (K) element;
-        this._currentSize++;
+        this._queue[this._currentSize++ % this._maxLength] = (K) element;
     }
 
     @Override
@@ -41,11 +43,8 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
             throw new QueueEmptyException();
         }
         this._queue[this._firstElement] = null;
-        ++this._firstElement;
-        if (this._firstElement > this._maxLength) {
-            this._firstElement = 0;
-        }
         --this._currentSize;
+        this._firstElement = (this._firstElement + 1) % this._maxLength;
     }
 
     @Override
@@ -71,29 +70,25 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         return Arrays.hashCode(this._queue);
     }
 
-    /**
-     * ernsthaft?
-     */
-    public boolean equals() {
-        return false;
-    }
-
     @org.jetbrains.annotations.Contract(value = "null -> false", pure = true)
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof FixedSizeQueue)) {
             return false;
         }
-        return this.toString().equals(obj.toString());
+        return Arrays.equals(this._queue, ((FixedSizeQueue) obj)._queue);
     }
 
     public String toString() {
         StringBuilder output = new StringBuilder();
-        for (Object element : this._queue) {
+        for (int i = 0; i < this._maxLength; ++i) {
+            K element = this._queue[(this._firstElement + i) % this._maxLength];
             output.append(element.toString());
             output.append(',');
         }
-        output.deleteCharAt(output.length() - 1);
+        if (output.length() > 0) {
+            output.deleteCharAt(output.length() - 1);
+        }
         return output.toString();
     }
 
@@ -101,17 +96,16 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         ObjectOutputStream out = new ObjectOutputStream(stream);
         out.writeObject(this._queue);
         out.writeObject(this._maxLength);
+        out.writeObject(this._firstElement);
+        out.writeObject(this._currentSize);
     }
 
     private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException, QueueFullException {
         ObjectInputStream in = new ObjectInputStream(stream);
 
-        K[] queue = (K[]) in.readObject();
+        this._queue = (K[]) in.readObject();
         this._maxLength = (int) in.readObject();
-        this._queue = (K[]) new Object[Math.max(FixedSizeQueue._minLength, this._maxLength)];
-
-        for (K k : queue) {
-            this.enqueue(k);
-        }
+        this._firstElement = (int) in.readObject();
+        this._currentSize = (int) in.readObject();
     }
 }
