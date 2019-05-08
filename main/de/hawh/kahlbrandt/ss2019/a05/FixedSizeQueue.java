@@ -1,6 +1,7 @@
 package de.hawh.kahlbrandt.ss2019.a05;
 
 import de.hawh.kahlbrandt.ss2019.a05.interfaces.Queue;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,9 +16,24 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
 
     private static final long serialVersionUID = 13245;
     private transient static final int _minLength = 1;
+    /**
+     * @serial
+     */
     private int _maxLength;
+
+    /**
+     * @serial
+     */
     private int _firstElement = 0;
+
+    /**
+     * @serial
+     */
     private K[] _queue;
+
+    /**
+     * @serial
+     */
     private int _currentSize = 0;
 
     public FixedSizeQueue() {
@@ -79,6 +95,7 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         return Arrays.equals(this._queue, ((FixedSizeQueue) obj)._queue);
     }
 
+    @Override
     public String toString() {
         StringBuilder output = new StringBuilder();
         for (int i = 0; i < this._maxLength; ++i) {
@@ -92,20 +109,11 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         return output.toString();
     }
 
-    private void writeObject(ObjectOutputStream stream) throws IOException {
-        ObjectOutputStream out = new ObjectOutputStream(stream);
-        out.writeObject(this._queue);
-        out.writeObject(this._maxLength);
-        out.writeObject(this._firstElement);
-        out.writeObject(this._currentSize);
+    private void writeObject(@NotNull ObjectOutputStream stream) throws IOException {
+        stream.defaultWriteObject();
     }
 
-    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException, QueueFullException {
-        ObjectInputStream in = new ObjectInputStream(stream);
-
-        this._queue = (K[]) in.readObject();
-        this._maxLength = (int) in.readObject();
-        this._firstElement = (int) in.readObject();
-        this._currentSize = (int) in.readObject();
+    private void readObject(@NotNull ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        stream.defaultReadObject();
     }
 }
