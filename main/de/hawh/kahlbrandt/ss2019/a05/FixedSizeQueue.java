@@ -29,7 +29,7 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
     /**
      * @serial
      */
-    private K[] _queue;
+    private transient K[] _queue;
 
     /**
      * @serial
@@ -109,11 +109,19 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         return output.toString();
     }
 
+    /**
+     * _queue just to make it custom somehow
+     */
     private void writeObject(@NotNull ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
+        stream.writeObject(this._queue);
     }
 
+    /**
+     * _queue just to make it custom somehow
+     */
     private void readObject(@NotNull ObjectInputStream stream) throws IOException, ClassNotFoundException {
         stream.defaultReadObject();
+        this._queue = (K[]) stream.readObject();
     }
 }
