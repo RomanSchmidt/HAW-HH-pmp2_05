@@ -26,9 +26,6 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
      */
     private int _firstElement = 0;
 
-    /**
-     * @serial
-     */
     private transient K[] _queue;
 
     /**
