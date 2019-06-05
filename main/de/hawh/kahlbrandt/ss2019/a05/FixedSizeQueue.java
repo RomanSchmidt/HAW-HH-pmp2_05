@@ -37,12 +37,17 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
         this(FixedSizeQueue.DEFAULT_CAPACITY);
     }
 
+    /**
+     * type erasure tho cast object[] to object[]
+     */
+    @SuppressWarnings("unchecked")
     public FixedSizeQueue(int maxLength) {
         this._maxLength = Math.max(FixedSizeQueue._minLength, maxLength);
         this._queue = (K[]) new Object[this._maxLength];
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void enqueue(Object element) throws QueueFullException {
         if (this.isFull()) {
             throw new QueueFullException();
@@ -86,6 +91,9 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
     @org.jetbrains.annotations.Contract(value = "null -> false", pure = true)
     @Override
     public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
         if (!(obj instanceof FixedSizeQueue)) {
             return false;
         }
@@ -108,6 +116,7 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
 
     /**
      * _queue just to make it custom somehow
+     * @serialData
      */
     private void writeObject(@NotNull ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
@@ -117,6 +126,7 @@ public class FixedSizeQueue<K> implements Queue, Serializable {
     /**
      * _queue just to make it custom somehow
      */
+    @SuppressWarnings("unchecked")
     private void readObject(@NotNull ObjectInputStream stream) throws IOException, ClassNotFoundException {
         stream.defaultReadObject();
         this._queue = (K[]) stream.readObject();
